@@ -1,6 +1,7 @@
 {
 	"name": "todo",
 	"version": "0.0.1",
+	"homepage": "https://cstormoen.github.io/todo",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
