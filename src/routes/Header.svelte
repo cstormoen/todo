@@ -11,7 +11,7 @@
 			class="btn btn-link"
 			aria-current={$page.url.pathname.startsWith('/todo') ? 'page' : undefined}
 		>
-			Todo ({$count})
+			<span class="badge" data-badge="{$count}">Todo</span>
 		</a>
 		<a
 			href="/about"
@@ -21,7 +21,7 @@
 		<a
 			href="/sverdle"
 			class="btn btn-link"
-			aria-current={$page.url.pathname.startsWith('/sverdle') ? 'page' : undefined}>Sverdle</a
+			aria-current={$page.url.pathname.startsWith('/sverdle') ? 'page' : undefined}>Game</a
 		>		
 	</section>
 	<section class="navbar-center">

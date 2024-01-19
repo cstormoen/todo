@@ -80,7 +80,7 @@
 
 	<form on:submit={addTodo}>
 		<div class="input-group">
-			<input class="form-input" type="text" bind:value={newTodo} />
+			<input class="form-input" type="text" bind:value={newTodo} placeholder="Your todo" />
 			<button type="submit" class="btn btn-primary input-group-btn">Add</button>
 		</div>
 	</form>

@@ -101,3 +101,8 @@ button:focus:not(:focus-visible) {
 .btn.btn-link.active, .btn.btn-link:active, .btn.btn-link:focus, .btn.btn-link:hover {
   color: #00ADB5;
 }
+
+.badge[data-badge]::after {
+	background: #00ADB5;
+	box-shadow: none;
+}
