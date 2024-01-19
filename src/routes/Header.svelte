@@ -19,11 +19,6 @@
 			class="btn btn-link"
 			aria-current={$page.url.pathname.startsWith('/about') ? 'page' : undefined}>About</a
 		>
-		<a
-			href="{base}/sverdle"
-			class="btn btn-link"
-			aria-current={$page.url.pathname.startsWith('/sverdle') ? 'page' : undefined}>Game</a
-		>		
 	</section>
 	<section class="navbar-center">
 		<figure class="s-circle">
