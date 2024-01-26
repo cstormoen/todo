@@ -5,66 +5,52 @@
 
 <script lang="ts">
 	import { fly } from 'svelte/transition';
+	import type { PageData } from './$types';
+	import type { ActionResult } from '@sveltejs/kit';
+	import { invalidateAll } from '$app/navigation';
+	import { applyAction, deserialize } from '$app/forms';
 
-	interface Todo {
-		id: number;
-		name: string;
-		finished: boolean;
-	}
+	export let data: PageData;
 
 	let newTodo = '';
-	let todos: Todo[] = [
-		{
-			id: 6,
-			name: 'create at least two components',
-			finished: true
-		},
-		{
-			id: 5,
-			name: 'add a button to delete todo',
-			finished: true
-		},		
-		{
-			id: 4,
-			name: 'add a checkbox with binding to finished',
-			finished: true
-		},				
-		{
-			id: 3,
-			name: 'add a form for adding new todo',
-			finished: true
-		},
-		{
-			id: 2,
-			name: 'add an unordered list of todos',
-			finished: true
-		},
-		{
-			id: 1,
-			name: 'create a new svelte project',
-			finished: true
-		}
-	];
 
 	$: {
-		count.set(todos.filter((todo) => !todo.finished).length);
+		count.set(data.todos.filter((todo) => !todo.finished).length);
 	}
 
-	function addTodo() {
-		todos = [
-			{
-				id: todos.length + 1,
-				name: newTodo,
-				finished: false
-			},
-			...todos,
-		];
+	async function addTodo(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		const formData = new FormData(event.currentTarget);
 
+		const response = await fetch(event.currentTarget.action, {
+			method: 'POST',
+			body: formData
+		});
+
+		const result: ActionResult = deserialize(await response.text());
+
+		if (result.type === 'success') {
+			await invalidateAll();
+		}
+
+		applyAction(result);
 		newTodo = '';
 	}
 
-	function remove(todoId: number) {
-		todos = todos.filter((t) => t.id !== todoId);
+	async function deleteTodo(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		const formData = new FormData(event.currentTarget);
+
+		const response = await fetch(event.currentTarget.action, {
+			method: 'POST',
+			body: formData
+		});
+
+		const result: ActionResult = deserialize(await response.text());
+
+		if (result.type === 'success') {
+			await invalidateAll();
+		}
+
+		applyAction(result);
 	}
 </script>
 
@@ -78,21 +64,28 @@
 
 	<p>You have {$count} unfinished todos!</p>
 
-	<form on:submit={addTodo}>
+	<form method="POST" action="?/create" on:submit|preventDefault={addTodo}>
 		<div class="input-group">
-			<input class="form-input" type="text" bind:value={newTodo} placeholder="Your todo" />
+			<input
+				class="form-input"
+				name="todo"
+				type="text"
+				bind:value={newTodo}
+				placeholder="Your todo"
+			/>
 			<button type="submit" class="btn btn-primary input-group-btn">Add</button>
 		</div>
 	</form>
 
 	<ul>
-		{#each todos as todo (todo.id)}
+		{#each data.todos as todo (todo.id)}
 			<li in:fly={{ y: -20, duration: 500 }} out:fly={{ y: 200, duration: 1200 }}>
 				<input type="checkbox" bind:checked={todo.finished} placeholder="Add your todo.." />
 				<span class:finished={todo.finished}>{todo.name}</span>
-				<button class="btn btn-error btn-sm" type="button" on:click={() => remove(todo.id)}
-					>Delete</button
-				>
+				<form method="POST" action="?/delete" on:submit|preventDefault={deleteTodo}>
+					<input type="hidden" name="id" value="{todo.id}">
+					<button class="btn btn-error btn-sm" type="submit">Delete</button>
+				</form>
 			</li>
 		{/each}
 	</ul>
@@ -111,28 +104,19 @@
 		padding-bottom: 0.3rem;
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
 	}
 
 	li input {
 		flex: 0 0 15px;
-		margin-right: 1rem;
 	}
 
 	li span {
-		flex: 0 1 auto;
-		margin-right: 0.5rem;
+		flex: 1 1 auto;
 	}
 
 	li span.finished {
 		text-decoration: line-through;
-	}
-
-	li button {
-		visibility: hidden;
-	}
-
-	li:hover button {
-		visibility: visible;
 	}
 
 	form {
