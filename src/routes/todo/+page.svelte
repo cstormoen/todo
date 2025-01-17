@@ -27,7 +27,7 @@
 		});
 
 		const result: ActionResult = deserialize(await response.text());
-
+		
 		if (result.type === 'success') {
 			await invalidateAll();
 		}
@@ -52,6 +52,26 @@
 
 		applyAction(result);
 	}
+
+	async function markAsFinished(todo: any) {
+		console.log(todo);
+		const formData = new FormData();
+		formData.set('id', todo._id);
+		formData.set('finished', todo.finished);
+
+		const response = await fetch('?/update', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result: ActionResult = deserialize(await response.text());
+
+		if (result.type === 'success') {
+			await invalidateAll();
+		}
+
+		applyAction(result);		
+	}
 </script>
 
 <svelte:head>
@@ -68,7 +88,7 @@
 		<div class="input-group">
 			<input
 				class="form-input"
-				name="todo"
+				name="name"
 				type="text"
 				bind:value={newTodo}
 				placeholder="Your todo"
@@ -78,12 +98,16 @@
 	</form>
 
 	<ul>
-		{#each data.todos as todo (todo.id)}
+		{#each data.todos as todo (todo._id)}
 			<li in:fly={{ y: -20, duration: 500 }} out:fly={{ y: 200, duration: 1200 }}>
-				<input type="checkbox" bind:checked={todo.finished} placeholder="Add your todo.." />
+				<input 
+					type="checkbox" 
+					bind:checked={todo.finished}
+					on:change|preventDefault={() => markAsFinished(todo)}
+					placeholder="Add your todo.." />
 				<span class:finished={todo.finished}>{todo.name}</span>
 				<form method="POST" action="?/delete" on:submit|preventDefault={deleteTodo}>
-					<input type="hidden" name="id" value="{todo.id}">
+					<input type="hidden" name="id" value="{todo._id}">
 					<button class="btn btn-error btn-sm" type="submit">Delete</button>
 				</form>
 			</li>

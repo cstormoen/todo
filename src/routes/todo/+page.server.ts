@@ -2,79 +2,66 @@ import type {
   PageServerLoad,
   Actions
 } from './$types';
-import type { Todo } from './todo';
+import { connect } from '$lib/server/db';
+import { Todo } from '$lib/server/models';
 
 export const prerender = false;
 
-let todos: Todo[] = [
-  {
-    id: 6,
-    name: 'create at least two components',
-    finished: true
-  },
-  {
-    id: 5,
-    name: 'add a button to delete todo',
-    finished: true
-  },
-  {
-    id: 4,
-    name: 'add a checkbox with binding to finished',
-    finished: true
-  },
-  {
-    id: 3,
-    name: 'add a form for adding new todo',
-    finished: true
-  },
-  {
-    id: 2,
-    name: 'add an unordered list of todos',
-    finished: true
-  },
-  {
-    id: 1,
-    name: 'create a new svelte project',
-    finished: true
-  }
-];
+export const load: PageServerLoad = (async () => {
+  await connect();
+  const todos = await Todo.find().where('deleted').equals(false);
 
-export const load: PageServerLoad = (() => {
   return {
-    todos,
+    todos: todos.map(todo => todo.toJSON({
+      flattenObjectIds: true
+    })),
   };
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
   create: async ({ request }) => {
-    const data = await request.formData();
-    const todo = data.get('todo');
+    const payload = await request.formData();
+    const name = payload.get('name');
 
-    if (todo) {
-      console.log(todo);
-      todos = [
-        {
-          id: todos.length + 1,
-          name: todo.toString(),
-          finished: false
-        },
-        ...todos,
-      ]
+    try {
+      const todo = {
+        name: name?.toString(),
+        finished: false
+      };
+
+      await Todo.validate(todo);
+      const result = await Todo.create(todo);
+      return result.toJSON({ flattenObjectIds: true });
+    } catch (error) {
+      console.log(error);
+      return false;
     }
-
-    return true
   },
 
-  delete: async ({request}) => {
+  delete: async ({ request }) => {
     const data = await request.formData();
     const id = data.get('id');
 
     if (id) {
-      const idAsNumber = Number.parseInt(id.toString());
-      todos = todos.filter(todo => todo.id !== idAsNumber);
-
+      await Todo.findByIdAndUpdate({ _id: id }, { deleted: true });
+      return true;
     }
 
-    return true   
+    return false;
+  },
+
+  update: async ({ request }) => {
+    const data = await request.formData();
+    const id = data.get('id');
+    const finished = data.get('finished');
+    console.log('finished', finished);
+    
+
+    if (id) {
+      await Todo.findByIdAndUpdate({ _id: id }, { finished });
+      return true;
+    }
+
+    return false;
   }
 }
